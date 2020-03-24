@@ -8,10 +8,10 @@ function updateDisplay(table) {
     fetch(url)
         .then(function(response) {
         response.json()
-        .then(function(table) {
-            console.log(table);
+        .then(function(response) {
+            console.log(response, table);
             table.DataTable( {
-                data: url,
+                data: response,
                 columns: [
                     { title: "ID"},
                     { title: "Date-time" },
@@ -29,7 +29,8 @@ function updateDisplay(table) {
                     { title: "lat" },
                     { title: "long" }
                 ]
-            } );
+            });
+            table.DataTable();
         });
     });
 };
