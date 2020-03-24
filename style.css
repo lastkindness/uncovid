@@ -3,12 +3,18 @@ html {
   }
 
 body {
-margin: 0 auto;
-background-color: #ccc;
+  margin: 0 auto;
+  background-color: #ccc;
+  padding: 50px 0;
 }
 
-table {
-    width: 100%;
+table.dataTable {
+  width: 100%;
+  padding: 30px 0;
+}
+
+table td {
+  text-align: center;
 }
 
 .container {
