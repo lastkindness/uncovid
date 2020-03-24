@@ -10,3 +10,8 @@ background-color: #ccc;
 table {
     width: 100%;
 }
+
+.container {
+  width: 80%;
+  margin: 0 auto;
+}

@@ -1,4 +1,4 @@
-var table = document.getElementById('table');
+var table = $('table');
 
 window.onload = function() {
     updateDisplay(table);
@@ -9,9 +9,10 @@ function updateDisplay(table) {
         .then(function(response) {
         response.json()
         .then(function(response) {
-            console.log(response, table);
+            dataСonversion(response);
+            console.log(dataСonversion(response));
             table.DataTable( {
-                data: response,
+                data: dataСonversion(response),
                 columns: [
                     { title: "ID"},
                     { title: "Date-time" },
@@ -30,7 +31,14 @@ function updateDisplay(table) {
                     { title: "long" }
                 ]
             });
-            table.DataTable();
         });
     });
 };
+
+function dataСonversion(response) {
+    var dataSet = [];
+    response.forEach((value, index, array) => {
+        dataSet.push(Object.values(value));
+    })
+    return dataSet;
+}
