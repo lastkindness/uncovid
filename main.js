@@ -38,16 +38,10 @@ function dataСonversion(response) {
     var totalLength = dataSet[0].length;
     var totalCount = dataSet[0][12];
     dataSet.forEach((value) => {
-        if(value.length<totalLength) {
-            value.splice(value.length-1, 1);
-        } else {
-            value.splice(value.length-3, 3);
-        }
         value.splice(0, 1);
         value.splice(2, 1);
         var specificGravity = (+value[2])/totalCount*100;
-        value.push(specificGravity.toFixed(4)+"%");
-        
+        value.splice(10, 1, specificGravity.toFixed(4)+"%");
     });
 
     return dataSet;
