@@ -35,7 +35,6 @@ function dataСonversion(response) {
     response.forEach((value) => {
         dataSet.push(Object.values(value));
     });
-    var totalLength = dataSet[0].length;
     var totalCount = dataSet[0][12];
     dataSet.forEach((value) => {
         value.splice(0, 1);
