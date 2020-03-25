@@ -9,7 +9,6 @@ function updateDisplay(table) {
         .then(function(response) {
         response.json()
         .then(function(response) {
-            //dataСonversion(response);
             console.log(dataСonversion(response));
             table.DataTable( {
                 data: dataСonversion(response),
@@ -37,7 +36,7 @@ function dataСonversion(response) {
         dataSet.push(Object.values(value));
     });
     var totalLength = dataSet[0].length;
-    var totalCount = 0;
+    var totalCount = dataSet[0][12];
     dataSet.forEach((value) => {
         if(value.length<totalLength) {
             value.splice(value.length-1, 1);
@@ -46,13 +45,10 @@ function dataСonversion(response) {
         }
         value.splice(0, 1);
         value.splice(2, 1);
-        totalCount = totalCount + (+value[2]);
-    });
-    dataSet.forEach((value) => {
         var specificGravity = (+value[2])/totalCount*100;
         value.push(specificGravity.toFixed(4)+"%");
+        
     });
-
 
     return dataSet;
 }
