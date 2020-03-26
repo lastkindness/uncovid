@@ -33,7 +33,6 @@ function dataTableFunction(response, table) {
     for (var i = 0; i < keys.length-3; i++) {
         keysArr[i] = {
             title: keys[i].charAt(0).toUpperCase() + keys[i].substr(1).replace(/[_]/g, ' ')
-
         };
         keysArr[keys.length-3] = {
             title: "% of cases in the world"
@@ -54,6 +53,8 @@ function dataScheduleFunction(response, schedule) {
     var keys = Object.keys(response[0]);
     var labelArr = [];
     var dataArr = [];
+    var datasetsArr = [];
+    var colors = [];
     for (var i = 2; i < keys.length-1; i++) {
         labelArr.push(keys[i]);
     }
@@ -63,20 +64,23 @@ function dataScheduleFunction(response, schedule) {
         values.splice(5, 1);
         dataArr.push(values);
     }
-    console.log(dataArr);
+    for (var i = 0; i < response.length; i++) {
+        var r = 255-(i*20);
+        var g = 99+(i*10);
+        var b = 10+(i*20);
+        datasetsArr[i] = {
+            label: dataDate[i],
+            borderColor: 'rgb('+r+', '+g+', '+b+')',
+            data: dataArr[i]
+        };
+        console.log('rgb('+r+', '+g+', '+b+')');
+    }
+    console.log(dataDate[i]);
     var chart = new Chart(schedule, {
         type: 'line',
         data: {
-            labels: dataDate,
-            function() {
-                for (var i = 0; i < labelArr.length; i++) {
-                    datasets: [{
-                        label: labelArr[i],
-                        borderColor: 'rgb(255, 99, 132)',
-                        data: dataArr[i]
-                    }]
-                }
-            }
+            labels: labelArr,
+            datasets: datasetsArr
         }
     });
 };
