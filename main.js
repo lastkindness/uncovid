@@ -1,52 +1,82 @@
-var table = $('table');
+var table = $('#table');
+var urlTable = 'http://uncovid.com/wp-json/cov/mapcases';
+var schedule = document.getElementById('myChart').getContext('2d');
+var urlSchedule = 'http://uncovid.com/wp-json/cov/gettotalcases';
 
 window.onload = function() {
-    updateDisplay(table);
+    updateDisplay(table, schedule, urlTable, urlSchedule);
 };
-function updateDisplay(table) {
-    var url = 'http://uncovid.com/wp-json/cov/mapcases';
-    fetch(url)
-        .then(function(response) {
+function updateDisplay(table, schedule, urlTable, urlSchedule) {
+    fetch(urlTable)
+    .then(function(response) {
         response.json()
         .then(function(response) {
-            var dataСonversion = response.map(function(item, i) {
-                var itemValue = [item.statistic_taken_at, item.country_name, item.cases, item.deaths, item.total_recovered, item.new_cases, item.new_deaths, item.serious_critical, item.total_cases_per_1m_population, item.active_cases, ((+item.cases/item.TotalCount)*100).toFixed(4)+"%"];
-                return itemValue;
-            });
-            console.log(response);
-            table.DataTable( {
-                //data: dataСonversion(response),
-                data: dataСonversion,
-                columns: [
-                    { title: "Date-time" },
-                    { title: "Country" },
-                    { title: "Cases" },
-                    { title: "Deaths" },
-                    { title: "Total recovered" },
-                    { title: "New cases" },
-                    { title: "New deaths" },
-                    { title: "Serious critical" },
-                    { title: "Total cases per 1m population" },
-                    { title: "Active cases" },
-                    { title: "% of cases in the world" }
-                ]
-            });
+            dataTableFunction(response, table);
+        });
+    });
+    fetch(urlSchedule)
+    .then(function(response) {
+        response.json()
+        .then(function(response) {
+            dataScheduleFunction(response, schedule);
         });
     });
 };
 
-// function dataСonversion(response) {
-//     var dataSet = [];
-//     response.forEach((value) => {
-//         dataSet.push(Object.values(value));
-//     });
-//     var totalCount = dataSet[0][12];
-//     dataSet.forEach((value) => {
-//         value.splice(0, 1);
-//         value.splice(2, 1);
-//         var specificGravity = (+value[2])/totalCount*100;
-//         value.splice(10, 1, specificGravity.toFixed(4)+"%");
-//     });
+function dataTableFunction(response, table) {
+    var dataСonversion = response.map(function(item) {
+        var itemValue = [item.statistic_taken_at, item.country_name, item.cases, item.deaths, item.total_recovered, item.new_cases, item.new_deaths, item.serious_critical, item.total_cases_per_1m_population, item.active_cases, ((+item.cases/item.TotalCount)*100).toFixed(4)+"%"];
+        return itemValue;
+    });
+    var keys = Object.keys(response[0]);
+    var keysArr = [];
+    for (var i = 0; i < keys.length-3; i++) {
+        keysArr[i] = {
+            title: keys[i].charAt(0).toUpperCase() + keys[i].substr(1).replace(/[_]/g, ' ')
 
-//     return dataSet;
-// }
+        };
+        keysArr[keys.length-3] = {
+            title: "% of cases in the world"
+        };
+    }
+    keysArr.splice(0, 1);
+    keysArr.splice(2, 1);
+    table.DataTable({
+        data: dataСonversion,
+        columns: keysArr
+    });
+}
+
+function dataScheduleFunction(response, schedule) {
+    var dataDate = response.map(function(item) {
+        return item.statistic_taken_at.split(' ')[0];
+    });
+    var keys = Object.keys(response[0]);
+    var labelArr = [];
+    var dataArr = [];
+    for (var i = 2; i < keys.length-1; i++) {
+        labelArr.push(keys[i]);
+    }
+    for (var i = 0; i < response.length; i++) {
+        var values = Object.values(response[i]);
+        values.splice(0, 2);
+        values.splice(5, 1);
+        dataArr.push(values);
+    }
+    console.log(dataArr);
+    var chart = new Chart(schedule, {
+        type: 'line',
+        data: {
+            labels: dataDate,
+            function() {
+                for (var i = 0; i < labelArr.length; i++) {
+                    datasets: [{
+                        label: labelArr[i],
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: dataArr[i]
+                    }]
+                }
+            }
+        }
+    });
+};
