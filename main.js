@@ -5,6 +5,7 @@ var urlSchedule = 'http://uncovid.com/wp-json/cov/gettotalcases';
 
 window.onload = function() {
     updateDisplay(table, schedule, urlTable, urlSchedule);
+    updateDay();
 };
 function updateDisplay(table, schedule, urlTable, urlSchedule) {
     fetch(urlTable)
@@ -49,38 +50,85 @@ function dataTableFunction(response, table) {
 function dataScheduleFunction(response, schedule) {
     var dataDate = response.map(function(item) {
         return item.statistic_taken_at.split(' ')[0];
-    });
-    var keys = Object.keys(response[0]);
-    var labelArr = [];
-    var dataArr = [];
-    var datasetsArr = [];
-    var colors = [];
+    }),
+        keys = Object.keys(response[0]);
+        labelArr = [];
+        dataArr = [];
+        datasetsArr = [];
     for (var i = 2; i < keys.length-1; i++) {
         labelArr.push(keys[i]);
     }
-    for (var i = 0; i < response.length; i++) {
-        var values = Object.values(response[i]);
-        values.splice(0, 2);
-        values.splice(5, 1);
-        dataArr.push(values);
+    for (var z = 0; z < labelArr.length; z++) {
+        var kayVal = labelArr[z],
+            index = keys.findIndex(key => key === kayVal),
+            valueArr = [];
+        for (var i = 0; i < response.length; i++) {
+            var responseVal = Object.values(response[i]);
+            valueArr.push(responseVal[index]);
+        }
+        dataArr.push(valueArr);
     }
-    for (var i = 0; i < response.length; i++) {
-        var r = 255-(i*20);
-        var g = 99+(i*10);
-        var b = 10+(i*20);
+    for (var i = 0; i < labelArr.length; i++) {
+        var r = 255-(i*35),
+            g = 85+(i*25),
+            b = 0+(i*35);
         datasetsArr[i] = {
-            label: dataDate[i],
+            label: labelArr[i],
             borderColor: 'rgb('+r+', '+g+', '+b+')',
             data: dataArr[i]
         };
-        console.log('rgb('+r+', '+g+', '+b+')');
     }
-    console.log(dataDate[i]);
     var chart = new Chart(schedule, {
         type: 'line',
         data: {
-            labels: labelArr,
+            labels: dataDate,
             datasets: datasetsArr
         }
     });
 };
+
+function updateDay() {
+    var dateFormat = "mm/dd/yy",
+        dateFrom = "",
+        dateTo = "",
+      from = $("#from")
+        .datepicker({
+          dateFormat: "yy-mm-dd",
+          defaultDate: "+1w",
+          changeMonth: true,
+          numberOfMonths: 3
+        })
+        .on( "change", function() {
+          to.datepicker( "option", "minDate", getDate( this ) );
+          dateFrom =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
+        }),
+      to = $( "#to" ).datepicker({
+        dateFormat: "yy-mm-dd",
+        defaultDate: "+1w",
+        changeMonth: true,
+        numberOfMonths: 3
+      })
+      .on( "change", function() {
+        from.datepicker("option", "maxDate", getDate( this ));
+        dateTo =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
+        console.log(dateFrom + " - " + dateTo);
+      });
+    function getDate( element ) {
+      var date;
+      try {
+        date = $.datepicker.parseDate( dateFormat, element.value );
+      } catch( error ) {
+        date = null;
+      }
+      return date;
+    }
+};
+
+
+$("#select2").select2({
+    width: '30%',
+    minimumResultsForSearch: -1,
+    dropdownCssClass: "hide-option"
+}).on('change', function(e) {
+    console.log($(this).val());
+});
