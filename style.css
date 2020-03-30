@@ -21,3 +21,17 @@ table td {
   width: 80%;
   margin: 0 auto;
 }
+
+.section {
+  padding: 30px 0;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.datepicker {
+  width: 50%;
+}

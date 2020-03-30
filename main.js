@@ -5,6 +5,7 @@ var urlSchedule = 'http://uncovid.com/wp-json/cov/gettotalcases';
 
 window.onload = function() {
     updateDisplay(table, schedule, urlTable, urlSchedule);
+    updateDay();
 };
 function updateDisplay(table, schedule, urlTable, urlSchedule) {
     fetch(urlTable)
@@ -58,17 +59,19 @@ function dataScheduleFunction(response, schedule) {
         labelArr.push(keys[i]);
     }
     for (var z = 0; z < labelArr.length; z++) {
+        var kayVal = labelArr[z],
+            index = keys.findIndex(key => key === kayVal),
+            valueArr = [];
         for (var i = 0; i < response.length; i++) {
-            var responseVal = response[i],
-                kayVal = labelArr[z];
-            Object.keys(responseVal).find(key => responseVal[key] === kayVal);
-            console.log(Object.keys(responseVal).find(key => responseVal[key] === kayVal));
+            var responseVal = Object.values(response[i]);
+            valueArr.push(responseVal[index]);
         }
+        dataArr.push(valueArr);
     }
     for (var i = 0; i < labelArr.length; i++) {
         var r = 255-(i*35),
-            g = 99+(i*25),
-            b = 10+(i*35);
+            g = 85+(i*25),
+            b = 0+(i*35);
         datasetsArr[i] = {
             label: labelArr[i],
             borderColor: 'rgb('+r+', '+g+', '+b+')',
@@ -83,3 +86,49 @@ function dataScheduleFunction(response, schedule) {
         }
     });
 };
+
+function updateDay() {
+    var dateFormat = "mm/dd/yy",
+        dateFrom = "",
+        dateTo = "",
+      from = $("#from")
+        .datepicker({
+          dateFormat: "yy-mm-dd",
+          defaultDate: "+1w",
+          changeMonth: true,
+          numberOfMonths: 3
+        })
+        .on( "change", function() {
+          to.datepicker( "option", "minDate", getDate( this ) );
+          dateFrom =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
+        }),
+      to = $( "#to" ).datepicker({
+        dateFormat: "yy-mm-dd",
+        defaultDate: "+1w",
+        changeMonth: true,
+        numberOfMonths: 3
+      })
+      .on( "change", function() {
+        from.datepicker("option", "maxDate", getDate( this ));
+        dateTo =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
+        console.log(dateFrom + " - " + dateTo);
+      });
+    function getDate( element ) {
+      var date;
+      try {
+        date = $.datepicker.parseDate( dateFormat, element.value );
+      } catch( error ) {
+        date = null;
+      }
+      return date;
+    }
+};
+
+
+$("#select2").select2({
+    width: '30%',
+    minimumResultsForSearch: -1,
+    dropdownCssClass: "hide-option"
+}).on('change', function(e) {
+    console.log($(this).val());
+});
