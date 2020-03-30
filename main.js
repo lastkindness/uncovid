@@ -49,37 +49,36 @@ function dataTableFunction(response, table) {
 function dataScheduleFunction(response, schedule) {
     var dataDate = response.map(function(item) {
         return item.statistic_taken_at.split(' ')[0];
-    });
-    var keys = Object.keys(response[0]);
-    var labelArr = [];
-    var dataArr = [];
-    var datasetsArr = [];
-    var colors = [];
+    }),
+        keys = Object.keys(response[0]);
+        labelArr = [];
+        dataArr = [];
+        datasetsArr = [];
     for (var i = 2; i < keys.length-1; i++) {
         labelArr.push(keys[i]);
     }
-    for (var i = 0; i < response.length; i++) {
-        var values = Object.values(response[i]);
-        values.splice(0, 2);
-        values.splice(5, 1);
-        dataArr.push(values);
+    for (var z = 0; z < labelArr.length; z++) {
+        for (var i = 0; i < response.length; i++) {
+            var responseVal = response[i],
+                kayVal = labelArr[z];
+            Object.keys(responseVal).find(key => responseVal[key] === kayVal);
+            console.log(Object.keys(responseVal).find(key => responseVal[key] === kayVal));
+        }
     }
-    for (var i = 0; i < response.length; i++) {
-        var r = 255-(i*20);
-        var g = 99+(i*10);
-        var b = 10+(i*20);
+    for (var i = 0; i < labelArr.length; i++) {
+        var r = 255-(i*35),
+            g = 99+(i*25),
+            b = 10+(i*35);
         datasetsArr[i] = {
-            label: dataDate[i],
+            label: labelArr[i],
             borderColor: 'rgb('+r+', '+g+', '+b+')',
             data: dataArr[i]
         };
-        console.log('rgb('+r+', '+g+', '+b+')');
     }
-    console.log(dataDate[i]);
     var chart = new Chart(schedule, {
         type: 'line',
         data: {
-            labels: labelArr,
+            labels: dataDate,
             datasets: datasetsArr
         }
     });
