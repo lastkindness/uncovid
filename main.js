@@ -1,11 +1,10 @@
 var table = $('#table');
-var urlTable = 'http://uncovid.com/wp-json/cov/mapcases';
+var urlTable = 'https://uncovid.com/wp-json/cov/mapcases';
 var schedule = document.getElementById('myChart').getContext('2d');
-var urlSchedule = 'http://uncovid.com/wp-json/cov/gettotalcases';
+var urlSchedule = 'https://uncovid.com/wp-json/cov/gettotalcases';
 
 window.onload = function() {
     updateDisplay(table, schedule, urlTable, urlSchedule);
-    updateDay();
 };
 function updateDisplay(table, schedule, urlTable, urlSchedule) {
     fetch(urlTable)
@@ -19,7 +18,13 @@ function updateDisplay(table, schedule, urlTable, urlSchedule) {
     .then(function(response) {
         response.json()
         .then(function(response) {
-            dataScheduleFunction(response, schedule);
+            var dataDate = response.map(function(item) {
+                    return item.statistic_taken_at.split(' ')[0];
+                });
+            var labelArr = [];
+            dataScheduleFunction(response, schedule, dataDate, labelArr);
+            updateDay(response, dataDate, labelArr);
+            select2(labelArr);
         });
     });
 };
@@ -47,13 +52,9 @@ function dataTableFunction(response, table) {
     });
 }
 
-function dataScheduleFunction(response, schedule) {
-    var dataDate = response.map(function(item) {
-        return item.statistic_taken_at.split(' ')[0];
-    }),
-        keys = Object.keys(response[0]);
-        labelArr = [];
-        dataArr = [];
+function dataScheduleFunction(response, schedule, dataDate, labelArr) {
+    var keys = Object.keys(response[0]),
+        dataArr = [],
         datasetsArr = [];
     for (var i = 2; i < keys.length-1; i++) {
         labelArr.push(keys[i]);
@@ -85,33 +86,37 @@ function dataScheduleFunction(response, schedule) {
             datasets: datasetsArr
         }
     });
+    console.log(labelArr);
+    return labelArr;
 };
 
-function updateDay() {
-    var dateFormat = "mm/dd/yy",
+function updateDay(response, dataDate, labelArr) {
+    var dateFormat = "yy-mm-dd",
         dateFrom = "",
         dateTo = "",
-      from = $("#from")
+        from = $("#from")
         .datepicker({
-          dateFormat: "yy-mm-dd",
+          dateFormat: dateFormat,
           defaultDate: "+1w",
           changeMonth: true,
-          numberOfMonths: 3
+          numberOfMonths: 1
         })
         .on( "change", function() {
-          to.datepicker( "option", "minDate", getDate( this ) );
-          dateFrom =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
+          to.datepicker( "option", "minDate", getDate( this ));
+          dateFrom =  $(this).datepicker({ dateFormat: dateFormat }).val();
         }),
       to = $( "#to" ).datepicker({
-        dateFormat: "yy-mm-dd",
+        dateFormat: dateFormat,
         defaultDate: "+1w",
         changeMonth: true,
-        numberOfMonths: 3
+        numberOfMonths: 1
       })
       .on( "change", function() {
         from.datepicker("option", "maxDate", getDate( this ));
-        dateTo =  $(this).datepicker({ dateFormat: 'dd-mm-yy' }).val();
-        console.log(dateFrom + " - " + dateTo);
+        dateTo =  $(this).datepicker({ dateFormat: dateFormat }).val();
+        updateSchedule(dateFrom, dateTo, response, dataDate);
+        console.log(labelArr);
+        dataScheduleFunction(response, schedule, updateSchedule(dateFrom, dateTo, response, dataDate), labelArr);
       });
     function getDate( element ) {
       var date;
@@ -124,11 +129,47 @@ function updateDay() {
     }
 };
 
+function updateSchedule(dateFrom, dateTo, response, dataDate) {
+   var start = dateFrom,
+       end = dateTo,
+       dateNew = [],
+       selectDates = filterDate(dates=[],start,end),
+       selectIndexes = [];
+   for (var i = 0; i < selectDates.length; i++) {
+        var index = dataDate.find(key => key === selectDates[i]);
+        if(index!=undefined) {
+            dateNew.push(index);
+        }
+   }
+   return dateNew;
+}
 
-$("#select2").select2({
+function filterDate(dates=[],start,end){
+    var start = new Date(start),
+        end = new Date(end),
+        result = [];
+    function pad(s){ return ('00' + s).slice(-2)}
+    while(start.getTime() <= end.getTime()) {
+      result.push( '' + start.getFullYear() +'-'+ pad(start.getMonth()+1) +'-'+ pad(start.getDate()));
+      start.setDate(start.getDate()+1);
+    }
+    return result;
+}
+
+
+function select2(labelArr) {
+    var select = $("#select2");
+    for (var i = 0; i < labelArr.length; i++) {
+        var option = document.createElement('option');
+        option.innerHTML = labelArr[i];
+        document.getElementById('select2').append(option);
+   }
+    select.select2({
     width: '30%',
     minimumResultsForSearch: -1,
     dropdownCssClass: "hide-option"
-}).on('change', function(e) {
-    console.log($(this).val());
-});
+    }).on('change', function(e) {
+        console.log([$(this).val()]);
+        dataScheduleFunction(response, schedule, dataDate, labelArr);
+    });
+};
