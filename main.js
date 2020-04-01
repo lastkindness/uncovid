@@ -22,9 +22,12 @@ function updateDisplay(table, schedule, urlTable, urlSchedule) {
                     return item.statistic_taken_at.split(' ')[0];
                 });
             var labelArr = [];
-            dataScheduleFunction(response, schedule, dataDate, labelArr);
+            var iter = 0;
+            var oldDataDate = [];
+            var oldSelect = [];
+            dataScheduleFunction(response, schedule, dataDate, labelArr, iter);
             updateDay(response, dataDate, labelArr);
-            select2(labelArr);
+            select2(labelArr, response, schedule, dataDate, iter);
         });
     });
 };
@@ -52,12 +55,14 @@ function dataTableFunction(response, table) {
     });
 }
 
-function dataScheduleFunction(response, schedule, dataDate, labelArr) {
+function dataScheduleFunction(response, schedule, dataDate, labelArr, iter) {
     var keys = Object.keys(response[0]),
         dataArr = [],
         datasetsArr = [];
-    for (var i = 2; i < keys.length-1; i++) {
-        labelArr.push(keys[i]);
+    if(iter==0) {
+        for (var i = 2; i < keys.length-1; i++) {
+            labelArr.push(keys[i]);
+        }
     }
     for (var z = 0; z < labelArr.length; z++) {
         var kayVal = labelArr[z],
@@ -69,6 +74,8 @@ function dataScheduleFunction(response, schedule, dataDate, labelArr) {
         }
         dataArr.push(valueArr);
     }
+    oldDataDate = dataDate;
+    console.log(oldDataDate);
     for (var i = 0; i < labelArr.length; i++) {
         var r = 255-(i*35),
             g = 85+(i*25),
@@ -86,11 +93,11 @@ function dataScheduleFunction(response, schedule, dataDate, labelArr) {
             datasets: datasetsArr
         }
     });
-    console.log(labelArr);
+    iter++;
     return labelArr;
 };
 
-function updateDay(response, dataDate, labelArr) {
+function updateDay(response, dataDate, labelArr, iter) {
     var dateFormat = "yy-mm-dd",
         dateFrom = "",
         dateTo = "",
@@ -114,11 +121,9 @@ function updateDay(response, dataDate, labelArr) {
       .on( "change", function() {
         from.datepicker("option", "maxDate", getDate( this ));
         dateTo =  $(this).datepicker({ dateFormat: dateFormat }).val();
-        updateSchedule(dateFrom, dateTo, response, dataDate);
-        console.log(labelArr);
-        dataScheduleFunction(response, schedule, updateSchedule(dateFrom, dateTo, response, dataDate), labelArr);
-      });
-    function getDate( element ) {
+        dataScheduleFunction(response, schedule, updateSchedule(dateFrom, dateTo, response, dataDate), select2(oldSelect, response, schedule, dataDate, iter), iter);
+    });
+    function getDate(element) {
       var date;
       try {
         date = $.datepicker.parseDate( dateFormat, element.value );
@@ -157,19 +162,29 @@ function filterDate(dates=[],start,end){
 }
 
 
-function select2(labelArr) {
+function select2(labelArr, response, schedule, dataDate, iter) {
     var select = $("#select2");
-    for (var i = 0; i < labelArr.length; i++) {
-        var option = document.createElement('option');
-        option.innerHTML = labelArr[i];
-        document.getElementById('select2').append(option);
-   }
+    if(iter==0) {
+        for (var i = 0; i < labelArr.length; i++) {
+            var option = document.createElement('option');
+            option.innerHTML = labelArr[i];
+            document.getElementById('select2').append(option);
+        }
+    }
+    oldSelect = labelArr;
     select.select2({
     width: '30%',
     minimumResultsForSearch: -1,
     dropdownCssClass: "hide-option"
     }).on('change', function(e) {
-        console.log([$(this).val()]);
-        dataScheduleFunction(response, schedule, dataDate, labelArr);
+        iter++;
+        if($(this).val()=="All") {
+            dataScheduleFunction(response, schedule, oldDataDate, labelArr, iter);
+            oldSelect = labelArr;
+        } else {
+            dataScheduleFunction(response, schedule, oldDataDate, [$(this).val()], iter);
+            oldSelect = [$(this).val()];
+        }
     });
+    return oldSelect;
 };
