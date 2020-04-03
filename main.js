@@ -23,11 +23,13 @@ function updateDisplay(table, schedule, urlTable, urlSchedule) {
                 });
             var labelArr = [];
             var iter = 0;
-            var oldDataDate = [];
+            var oldFrom = dataDate[0];
+            var oldTo = dataDate[dataDate.length-1];
             var oldSelect = [];
-            dataScheduleFunction(response, schedule, dataDate, labelArr, iter);
-            updateDay(response, dataDate, labelArr);
-            select2(labelArr, response, schedule, dataDate, iter);
+            var chart = new Chart(schedule, {});
+            dataScheduleFunction(response, schedule, dataDate, labelArr, iter, chart);
+            updateDay(response, dataDate, labelArr, chart, oldTo, oldFrom, iter);
+            select2(labelArr, response, schedule, dataDate, iter, chart, oldFrom, oldTo);
         });
     });
 };
@@ -55,7 +57,20 @@ function dataTableFunction(response, table) {
     });
 }
 
-function dataScheduleFunction(response, schedule, dataDate, labelArr, iter) {
+function dataScheduleFunction(response, schedule, dataDate, labelArr, iter, chart) {
+    var result = createDatasetsArr(response, dataDate, labelArr, iter);
+    chart = new Chart(schedule, {
+        type: 'line',
+        data: {
+            labels: result[0],
+            datasets: result[1]
+        }
+    });
+    return chart;
+};
+
+function createDatasetsArr(response, dataDate, labelArr, iter) {
+    console.log(iter);
     var keys = Object.keys(response[0]),
         dataArr = [],
         datasetsArr = [];
@@ -74,8 +89,6 @@ function dataScheduleFunction(response, schedule, dataDate, labelArr, iter) {
         }
         dataArr.push(valueArr);
     }
-    oldDataDate = dataDate;
-    console.log(oldDataDate);
     for (var i = 0; i < labelArr.length; i++) {
         var r = 255-(i*35),
             g = 85+(i*25),
@@ -86,18 +99,11 @@ function dataScheduleFunction(response, schedule, dataDate, labelArr, iter) {
             data: dataArr[i]
         };
     }
-    var chart = new Chart(schedule, {
-        type: 'line',
-        data: {
-            labels: dataDate,
-            datasets: datasetsArr
-        }
-    });
     iter++;
-    return labelArr;
-};
+    return [dataDate, datasetsArr];
+}
 
-function updateDay(response, dataDate, labelArr, iter) {
+function updateDay(response, dataDate, labelArr, chart, oldTo, oldFrom, iter) {
     var dateFormat = "yy-mm-dd",
         dateFrom = "",
         dateTo = "",
@@ -121,7 +127,10 @@ function updateDay(response, dataDate, labelArr, iter) {
       .on( "change", function() {
         from.datepicker("option", "maxDate", getDate( this ));
         dateTo =  $(this).datepicker({ dateFormat: dateFormat }).val();
-        dataScheduleFunction(response, schedule, updateSchedule(dateFrom, dateTo, response, dataDate), select2(oldSelect, response, schedule, dataDate, iter), iter);
+        oldTo = dateTo;
+        oldFrom = dateFrom;
+        iter++;
+        updateData(updateSchedule(dateFrom, dateTo, response, dataDate), select2(oldSelect, response, schedule, dataDate, iter, chart, oldFrom, oldTo), response, iter, chart);
     });
     function getDate(element) {
       var date;
@@ -132,6 +141,7 @@ function updateDay(response, dataDate, labelArr, iter) {
       }
       return date;
     }
+    return [oldFrom, oldTo];
 };
 
 function updateSchedule(dateFrom, dateTo, response, dataDate) {
@@ -162,7 +172,7 @@ function filterDate(dates=[],start,end){
 }
 
 
-function select2(labelArr, response, schedule, dataDate, iter) {
+function select2(labelArr, response, schedule, dataDate, iter, chart, oldFrom, oldTo) {
     var select = $("#select2");
     if(iter==0) {
         for (var i = 0; i < labelArr.length; i++) {
@@ -179,12 +189,23 @@ function select2(labelArr, response, schedule, dataDate, iter) {
     }).on('change', function(e) {
         iter++;
         if($(this).val()=="All") {
-            dataScheduleFunction(response, schedule, oldDataDate, labelArr, iter);
+            updateData(updateSchedule(oldFrom, oldTo, response, dataDate), labelArr, response, iter, chart);
             oldSelect = labelArr;
+            console.log("All");
         } else {
-            dataScheduleFunction(response, schedule, oldDataDate, [$(this).val()], iter);
+            updateData(updateSchedule(oldFrom, oldTo, response, dataDate), [$(this).val()], response, iter, chart);
             oldSelect = [$(this).val()];
+            console.log("NOT All");
         }
     });
     return oldSelect;
 };
+
+function updateData(update1, update2, response, iter, chart) {
+    var resut = createDatasetsArr(response, update1, update2, iter);
+    chart.data.labels = resut[0];
+    chart.data.datasets = resut[1];
+    chart.type = 'bar';
+    console.log(chart.data.labels, chart.data.datasets, chart);
+    chart.update();
+}
