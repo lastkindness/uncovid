@@ -26,7 +26,9 @@ function updateDisplay(table, schedule, urlTable, urlSchedule) {
             var oldFrom = dataDate[0];
             var oldTo = dataDate[dataDate.length-1];
             var oldSelect = [];
-            var chart = new Chart(schedule, {});
+            var chart = new Chart(schedule, {
+                type: 'line'
+            });
             dataScheduleFunction(response, schedule, dataDate, labelArr, iter, chart);
             updateDay(response, dataDate, labelArr, chart, oldTo, oldFrom, iter);
             select2(labelArr, response, schedule, dataDate, iter, chart, oldFrom, oldTo);
@@ -59,13 +61,9 @@ function dataTableFunction(response, table) {
 
 function dataScheduleFunction(response, schedule, dataDate, labelArr, iter, chart) {
     var result = createDatasetsArr(response, dataDate, labelArr, iter);
-    chart = new Chart(schedule, {
-        type: 'line',
-        data: {
-            labels: result[0],
-            datasets: result[1]
-        }
-    });
+    chart.data.labels = result[0];
+    chart.data.datasets = result[1];
+    chart.update();
     return chart;
 };
 
@@ -202,10 +200,8 @@ function select2(labelArr, response, schedule, dataDate, iter, chart, oldFrom, o
 };
 
 function updateData(update1, update2, response, iter, chart) {
-    var resut = createDatasetsArr(response, update1, update2, iter);
-    chart.data.labels = resut[0];
-    chart.data.datasets = resut[1];
-    chart.type = 'bar';
-    console.log(chart.data.labels, chart.data.datasets, chart);
+    var result = createDatasetsArr(response, update1, update2, iter);
+    chart.data.labels = result[0];
+    chart.data.datasets = result[1];
     chart.update();
 }
